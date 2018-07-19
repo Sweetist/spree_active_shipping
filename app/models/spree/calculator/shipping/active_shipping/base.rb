@@ -28,6 +28,7 @@ module Spree
 
         def compute_package(package)
           order = package.order
+          @vendor = package.order.account.vendor
           stock_location = package.stock_location
 
           origin = build_location(stock_location)
@@ -40,7 +41,7 @@ module Spree
           rate = rates_result[self.class.description]
 
           return nil unless rate
-          rate = rate.to_f + (Spree::ActiveShipping::Config[:handling_fee].to_f || 0.0)
+          rate = rate.to_f + (@vendor.carriers['handling_fee'].to_f || 0.0)
 
           # divide by 100 since active_shipping rates are expressed as cents
           return rate/100.0
@@ -153,8 +154,8 @@ module Spree
         end
 
         def convert_package_to_weights_array(package)
-          multiplier = Spree::ActiveShipping::Config[:unit_multiplier]
-          default_weight = Spree::ActiveShipping::Config[:default_weight]
+          multiplier = @vendor.carriers['unit_multiplier']
+          default_weight = @vendor.carriers['default_weight']
           max_weight = get_max_weight(package)
 
           weights = package.contents.map do |content_item|
@@ -172,7 +173,7 @@ module Spree
         end
 
         def convert_package_to_item_packages_array(package)
-          multiplier = Spree::ActiveShipping::Config[:unit_multiplier]
+          multiplier = @vendor.carriers['unit_multiplier']
           max_weight = get_max_weight(package)
           packages = []
 
@@ -205,7 +206,7 @@ module Spree
 
         # Generates an array of Package objects based on the quantities and weights of the variants in the line items
         def packages(package)
-          units = Spree::ActiveShipping::Config[:units].to_sym
+          units = @vendor.carriers['units'].to_sym
           packages = []
           weights = convert_package_to_weights_array(package)
           max_weight = get_max_weight(package)
@@ -237,7 +238,7 @@ module Spree
         def get_max_weight(package)
           order = package.order
           max_weight = max_weight_for_country(order.ship_address.country)
-          max_weight_per_package = Spree::ActiveShipping::Config[:max_weight_per_package] * Spree::ActiveShipping::Config[:unit_multiplier]
+          max_weight_per_package = @vendor.carriers['max_weight_per_package'] * @vendor.carriers['unit_multiplier']
           if max_weight == 0 and max_weight_per_package > 0
             max_weight = max_weight_per_package
           elsif max_weight > 0 and max_weight_per_package < max_weight and max_weight_per_package > 0

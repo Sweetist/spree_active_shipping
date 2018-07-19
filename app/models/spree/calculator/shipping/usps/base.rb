@@ -22,7 +22,7 @@ module Spree
           rate = rates_result[self.class.service_code]
 
           return nil unless rate
-          rate = rate.to_f + (Spree::ActiveShipping::Config[:handling_fee].to_f || 0.0)
+          rate = rate.to_f + (@vendor.carriers['handling_fee'].to_f || 0.0)
 
           # divide by 100 since active_shipping rates are expressed as cents
           return rate/100.0
@@ -30,8 +30,8 @@ module Spree
 
         def carrier
           carrier_details = {
-            login: Spree::ActiveShipping::Config[:usps_login],
-            test: Spree::ActiveShipping::Config[:test_mode]
+            login: @vendor.carriers['usps_login'],
+            test: @vendor.carriers['test_mode']
           }
 
           ::ActiveShipping::USPS.new(carrier_details)
@@ -80,9 +80,9 @@ module Spree
         end
 
         def rate_options
-          if Spree::ActiveShipping::Config[:usps_commercial_plus]
+          if @vendor.carriers['usps_commercial_plus']
             { commercial_plus: true }
-          elsif Spree::ActiveShipping::Config[:usps_commercial_base]
+          elsif @vendor.carriers['usps_commercial_base']
             { commercial_base: true }
           else
             {}
