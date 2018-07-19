@@ -15,6 +15,17 @@ module Spree
           self.description
         end
 
+        def self.view_description
+          calc_name = description.split(' ')[0]
+          if %w[UPS USPS FedEx].include? calc_name
+            description.split(' ').insert(1, '-').join(' ')
+          elsif calc_name == 'Canada'
+            description.split(' ').insert(2, '-').join(' ')
+          else
+            description
+          end
+        end
+
         def available?(package)
           # helps the available? method determine
           # if rates are avaiable for this service
