@@ -15,7 +15,7 @@ module Spree
           self.description
         end
 
-        def self.view_description
+        def self.display_description
           calc_name = description.split(' ')[0]
           if %w[UPS USPS FedEx].include? calc_name
             description.split(' ').insert(1, '-').join(' ')
