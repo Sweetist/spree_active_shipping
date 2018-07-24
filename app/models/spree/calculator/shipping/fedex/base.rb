@@ -10,7 +10,8 @@ module Spree
             password: @vendor.carriers['fedex_password'],
             account: @vendor.carriers['fedex_account'],
             login: @vendor.carriers['fedex_login'],
-            test: @vendor.carriers['test_mode']
+            test: @vendor.carriers['test_mode'],
+            surcharges: @vendor.carriers['fedex_include_surcharges']
           }
           ::ActiveShipping::FedEx.new(carrier_details)
         end
