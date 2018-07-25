@@ -26,6 +26,12 @@ module Spree
           end
         end
 
+        def self.valid_credentials?(vendor)
+          service_name = name.split('::')[3].downcase
+          return false if service_name == 'canadapost'
+          vendor.send("#{service_name}_valid_credentials")
+        end
+
         def available?(package)
           # helps the available? method determine
           # if rates are avaiable for this service
