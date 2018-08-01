@@ -39,8 +39,8 @@ module Spree
           is_package_shippable?(package)
 
           !compute(package).nil?
-        rescue Spree::ShippingError
-          false
+        rescue Spree::ShippingError => e
+          raise e
         end
 
         def compute_package(package)
@@ -61,7 +61,7 @@ module Spree
           rate = rate.to_f + (@vendor.handling_fee.to_f || 0.0)
 
           # divide by 100 since active_shipping rates are expressed as cents
-          return rate/100.0
+          return rate / 100.0
         end
 
         def timing(line_items)
@@ -82,16 +82,17 @@ module Spree
           raise timings_result if timings_result.kind_of?(Spree::ShippingError)
           return nil if timings_result.nil? || !timings_result.is_a?(Hash) || timings_result.empty?
           return timings_result[self.description]
-
         end
 
         protected
+
         # weight limit in ounces or zero (if there is no limit)
         def max_weight_for_country(country)
           0
         end
 
         private
+
         # check for known limitations inside a package
         # that will limit you from shipping using a service
         def is_package_shippable? package
@@ -101,7 +102,7 @@ module Spree
 
         def country_weight_error? package
           max_weight = max_weight_for_country(package.order.ship_address.country)
-          raise Spree::ShippingError.new("#{I18n.t(:shipping_error)}: The maximum per package weight for the selected service from the selected country is #{max_weight} ounces.") unless valid_weight_for_package?(package, max_weight)
+          raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_limit_error')) unless valid_weight_for_package?(package, max_weight)
         end
 
         # zero weight check means no check
@@ -123,7 +124,6 @@ module Spree
             rate_hash = Hash[*rates.flatten]
             return rate_hash
           rescue ::ActiveShipping::Error => e
-
             if e.class == ::ActiveShipping::ResponseError && e.response.is_a?(::ActiveShipping::Response)
               params = e.response.params
               if params.has_key?("Response") && params["Response"].has_key?("Error") && params["Response"]["Error"].has_key?("ErrorDescription")
@@ -138,13 +138,11 @@ module Spree
               message = e.message
             end
 
-            error = Spree::ShippingError.new("#{I18n.t(:shipping_error)}: #{message}")
+            error = Spree::ShippingError.new(Spree.t('active_shipping.carrier_unable', carrier: carrier.name))
             Rails.cache.write @cache_key, error #write error to cache to prevent constant re-lookups
             raise error
           end
-
         end
-
 
         def retrieve_timings(origin, destination, packages)
           begin
@@ -183,7 +181,7 @@ module Spree
             if max_weight <= 0 || item_weight < max_weight
               item_weight
             else
-              raise Spree::ShippingError.new("#{I18n.t(:shipping_error)}: The maximum per package weight for the selected service from the selected country is #{max_weight} ounces.")  
+              raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_limit_error'))
             end
           end
           weights.flatten.compact.sort
@@ -205,7 +203,7 @@ module Spree
                   packages << [product_package.weight * multiplier, product_package.length, product_package.width, product_package.height]
                 end
               else
-                raise Spree::ShippingError.new("#{I18n.t(:shipping_error)}: The maximum per package weight for the selected service from the selected country is #{max_weight} ounces.")
+                raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_limit_error'))
               end
             end
           end
