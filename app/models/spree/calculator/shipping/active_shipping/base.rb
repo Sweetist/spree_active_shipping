@@ -221,6 +221,7 @@ module Spree
 
         # Generates an array of Package objects based on the quantities and weights of the variants in the line items
         def packages(package)
+          @vendor = package.order.account.vendor
           units = @vendor.units.to_sym
           packages = []
           weights = convert_package_to_weights_array(package)
