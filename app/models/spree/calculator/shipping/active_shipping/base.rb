@@ -53,7 +53,7 @@ module Spree
 
           rates_result = retrieve_rates_from_cache(package, origin, destination)
 
-          return nil if rates_result.kind_of?(Spree::ShippingError)
+          raise rates_result if rates_result.kind_of?(Spree::ShippingError)
           return nil if rates_result.empty?
           rate = rates_result[self.class.description]
 
@@ -102,7 +102,7 @@ module Spree
 
         def country_weight_error? package
           max_weight = max_weight_for_country(package.order.ship_address.country)
-          raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_limit_error')) unless valid_weight_for_package?(package, max_weight)
+          raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_error')) unless valid_weight_for_package?(package, max_weight)
         end
 
         # zero weight check means no check
@@ -181,7 +181,7 @@ module Spree
             if max_weight <= 0 || item_weight < max_weight
               item_weight
             else
-              raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_limit_error'))
+              raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_error'))
             end
           end
           weights.flatten.compact.sort
@@ -203,7 +203,7 @@ module Spree
                   packages << [product_package.weight * multiplier, product_package.length, product_package.width, product_package.height]
                 end
               else
-                raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_limit_error'))
+                raise Spree::ShippingError.new((Spree.t 'active_shipping.weight_error'))
               end
             end
           end
