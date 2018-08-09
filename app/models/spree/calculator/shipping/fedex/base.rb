@@ -15,6 +15,11 @@ module Spree
           }
           ::ActiveShipping::FedEx.new(carrier_details)
         end
+
+        protected
+        def max_weight_for_country(country)
+          2400 # 150 lbs
+        end
       end
     end
   end
