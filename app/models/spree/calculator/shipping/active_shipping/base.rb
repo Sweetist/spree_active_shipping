@@ -138,6 +138,11 @@ module Spree
               message = e.message
             end
 
+            Airbrake.notify(
+              error_message: "#{e.class} - #{e.message}",
+              error_class: 'Active Shipping'
+            )
+
             error = Spree::ShippingError.new(Spree.t('active_shipping.carrier_unable', carrier: carrier.name))
             Rails.cache.write @cache_key, error #write error to cache to prevent constant re-lookups
             raise error
