@@ -44,12 +44,12 @@ module Spree
         end
 
         def compute_package(package)
-          order = package.order
+          @order = package.order
           @vendor = package.order.account.vendor
           stock_location = package.stock_location
 
           origin = build_location(stock_location)
-          destination = build_location(order.ship_address)
+          destination = build_location(@order.ship_address)
 
           rates_result = retrieve_rates_from_cache(package, origin, destination)
 
@@ -140,7 +140,15 @@ module Spree
 
             Airbrake.notify(
               error_message: "#{e.class} - #{e.message}",
-              error_class: 'Active Shipping'
+              error_class: 'Active Shipping',
+              parameters: {
+                vendor_id: @order.vendor_id,
+                account_id: @order.account_id,
+                order_id: @order.id,
+                order_number: @order.number,
+                carrier: carrier.name,
+                test_mode: carrier.test_mode
+              }
             )
 
             error = Spree::ShippingError.new(Spree.t('active_shipping.carrier_unable', carrier: carrier.name))
