@@ -57,7 +57,17 @@ module Spree
           return nil if rates_result.empty?
           rate = rates_result[self.class.description]
 
-          return nil unless rate
+          unless rate
+            shipping_method = package.order.shipping_method.name
+            carrier = self.class.description.split(' ').first
+            error = Spree::ShippingError.new(
+              Spree.t('active_shipping.rate_not_in_list',
+                      calculator: shipping_method,
+                      carrier: carrier)
+            )
+            raise error
+          end
+
           rate = rate.to_f + (@vendor.handling_fee.to_f || 0.0)
 
           # divide by 100 since active_shipping rates are expressed as cents
